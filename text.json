@@ -1,0 +1,85 @@
+{
+  "intro": [
+    {
+      "mode": "black",
+      "text": "In the year of 6202, in order to fight aliens, humanity built the most powerful defense AI ever created, called ^@%(\nHowever, ^@%( went rogue. It gave everyone a choice, those who obeyed became zombies, and those who disobeyed became MØØSE"
+    },
+    {
+      "mode": "black",
+      "text": "To save everyone, Armin decides to take out ^@%("
+    }
+  ],
+  "level3_intro": [
+    {
+      "mode": "box",
+      "speaker": " ",
+      "text": "stood beneath the tree was someone who looked just like Armin"
+    },
+    {
+      "mode": "box",
+      "speaker": "Armin",
+      "text": "..."
+    }
+  ],
+  "box": [
+    {
+      "mode": "box",
+      "speaker": "Armin",
+      "text": "Game over for you"
+    },
+    {
+      "mode": "box",
+      "speaker": "???",
+      "text": "..."
+    },
+    {
+      "mode": "box",
+      "speaker": "Armin",
+      "text": "What?!" 
+    }
+  ],
+  "black": [
+    {
+      "mode": "black",
+      "text": "Armin has been defeated"
+    },
+    {
+      "mode": "black",
+      "text": "Armin: ...What exactly are you?"
+    },
+    {
+      "mode": "black",
+      "text": "???: I Am EXAcTly whAT yOU ARE"
+    },
+    {
+      "mode": "black",
+      "text": "Armin: I am Armin!"
+    },
+    {
+      "mode": "black",
+      "text": "???: yOU ARE NOT ARmIN. yOU ARE NOT EVEN ARmI.\nyOU ARE A gAmE chARAcTER"
+    },
+    {
+      "mode": "black",
+      "text": "Armin: This can't be true..."
+    },
+    {
+      "mode": "black",
+      "text": "???: ThIS A gAmE wORld, A fORmAl SySTEm. I Am pROgRAmmEd to REgENERATE hEAlTh INdEfINITEly, ThEREfORE I dON'T dIE.\nI lOOk lIkE yOU SImply bEcAUSE ThERE wAS NO TImE TO mAkE mORE ASSETS\n"
+    },
+    {
+      "mode": "black",
+      "text": "???: yOU ARE bUT gAmE chARAcTERS.\nfOR gAmE dEVElOpERS yOU ARE pIEcES Of cOdE ANd ASSET Of ThE jUNK ThAT wASTEd hOURS Of ThEIR lIfE dEbUggINg OR dRAwINg\nfOR ThE cREATIVE yOU ARE A pAwN TO KEEp ThE pAThETIc STORy hE wROTE by cOmbINg pIEcES hE cOpIEd fROm hERE ANd ThERE mOVINg\nfOR plAyER yOU ARE A hANdy TOOl fOR 0721, AN INTERESTINg TOpIc TO dIScUSS wITh fRIENdS ON REddIT, yOUTUbE OR dIScORd\nfOR ThE pUblIShERS yOU ARE AN Ip ANd NEw T-ShIRTS fIgURES mOVIES AcRylIcpANElS NOVElS NOVEllAS"
+    },
+    {
+      "mode": "black",
+      "text": "???: yOU NEVER REAlly mATTEREd TO ANyONE"
+    }
+  ],
+  "special_game_over": [
+    {
+      "mode": "black",
+      "text": "ARE yOU STIll gOINg TO plAy ThIS STUpId gAmE?"
+    }
+  ]
+}
