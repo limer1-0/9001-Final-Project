@@ -4,11 +4,11 @@ import json
 import random
 
 pygame.init()
-
+##################      Globals             #####################
 FONT = pygame.font.SysFont("consolas", 18, bold=False)
 TEXT_FONT = pygame.font.SysFont("consolas", 24, bold=True)
 CELL_W = FONT.size("M")[0]
-CELL_H = FONT.get_linesize() #get the pixel size of fonts
+CELL_H = FONT.get_linesize() #get the pixel size of fonts, which is the basic unit of title in this game
 COLS = 168
 ROWS = 42
 WIDTH = COLS * CELL_W #game screen
@@ -50,8 +50,9 @@ LEVEL3_FIRST_ENTRY_ACTIVE = False
 PLAYED_D_DIALOG = False
 
 START_MENU_BG = None
+##########################################################################
 
-class D:
+class D:  #although it's a class, it really is just a grouping of related function and variables; there's only one boss
     active = False
 
     W = CELL_W * 13
@@ -65,7 +66,7 @@ class D:
     HP_REGEN_DURATION_DECREASE = 300
     MIN_HP_REGEN_DURATION = 0
     COLOR = WHITE
-    INIDCATOR_COLOR = RED
+    INIDCATOR_COLOR = RED  
     LASER_COLOR = PURPLE
 
     vy = 0
@@ -173,7 +174,7 @@ class D:
     }
 
     @staticmethod
-    def reset(active=False, x=None, y=None):
+    def reset(active=False, x=None, y=None): #reset everything to default value
         D.active = active
         D.rect = pygame.Rect(18 * CELL_W if x is None else int(x), 5 * CELL_H if y is None else int(y), D.W, D.H)
         D.vy = 0
@@ -211,10 +212,10 @@ class D:
 
     @staticmethod
     def spawn(level): #spawn in the middle of the screen
-        d_spawn = level.get("d_spawn") or level.get("D_spawn")
-        if d_spawn:
-            D.reset(active=True, x=WIDTH // 2 - D.W // 2, y=spawn_y(d_spawn, 5))
-            return
+        # d_spawn = level.get("d_spawn") or level.get("D_spawn")
+        # if d_spawn:
+        #     D.reset(active=True, x=WIDTH // 2 - D.W // 2, y=spawn_y(d_spawn, 5))
+        #     return
 
         spots = open_spawn_spots(D.W, D.H)
         if spots:
@@ -236,7 +237,7 @@ class D:
 
 
     @staticmethod
-    def start_hp_regeneration():
+    def start_hp_regeneration(): #regenerate health as well as increase difficulty
         D.hp = max(0, D.hp)
         D.has_regenerated_hp = True
         D.dialog_pending = False
@@ -251,7 +252,7 @@ class D:
         D.hp_regenerating = True
 
     @staticmethod
-    def complete_first_dialog_regeneration():
+    def complete_first_dialog_regeneration(): #regenerate health in the level3 dialog
         D.has_regenerated_hp = True
         D.dialog_pending = False
         D.increase_difficulty()
@@ -260,7 +261,7 @@ class D:
         #D.start_hp_regeneration()
 
     @staticmethod
-    def update_hp_regeneration(dt): #regenerate some health 
+    def update_hp_regeneration(dt): #regenerate some health as time goes by
         if not D.hp_regenerating:
             return
         if D.HP_REGEN_DURATION <= 0:
@@ -276,7 +277,7 @@ class D:
             D.hp_regenerating = False
 
     @staticmethod
-    def current_frame():
+    def current_frame(): 
         frames = D.D_RIGHT[D.state] if D.direction == 1 else D.D_LEFT[D.state]
         D.frame = (pygame.time.get_ticks() // D.ANIM_SPEED) % len(frames)
         return frames[D.frame]
@@ -303,7 +304,7 @@ class D:
         return abs(Armin.rect.centerx - D.rect.centerx) <= D.LASER_RANGE
 
     @staticmethod
-    def move_horizontal(dx):
+    def move_horizontal(dx): #helper for move()
         if dx == 0:
             return 0
         old_x = D.rect.x
@@ -317,7 +318,7 @@ class D:
         return D.rect.x - old_x
 
     @staticmethod
-    def wall_in_front(move_dir):
+    def wall_in_front(move_dir): 
         if move_dir == 0:
             return False
         probe = D.rect.copy()
@@ -362,24 +363,27 @@ class D:
     def move(state, move_dir): 
         if move_dir == 0:
             return 0
-        D.reset_block_state(state, move_dir)
+        D.reset_block_state(state, move_dir)#see if the boss is still blocked by a wall
+
         if D.ai_blocked_state == state and D.ai_blocked_dir == move_dir:
             if D.wall_in_front(move_dir):
                 return 0
             D.ai_blocked_state = None
             D.ai_blocked_dir = 0
         dx = D.move_horizontal(move_dir * D.SPEED)
+
         if dx != 0:
             if D.ai_airborne and D.ai_jump_dir == move_dir:
                 D.ai_jump_moved = True
             return dx
+        
         if D.on_ground and D.wall_in_front(move_dir):
             D.jump(state, move_dir)
             return D.move_horizontal(move_dir * D.SPEED)
         return 0
 
     @staticmethod
-    def move_to_player():
+    def move_to_player(): #called when ready to attack the player
         distance = Armin.rect.centerx - D.rect.centerx
         move_dir = 1 if distance >= 0 else -1
         D.direction = move_dir
@@ -389,7 +393,7 @@ class D:
         return D.move("attack", move_dir)
 
     @staticmethod
-    def move_out_of_bullet_range():
+    def move_out_of_bullet_range(): #called when the laser is cooling down and not able to attack
         distance = Armin.rect.centerx - D.rect.centerx
         player_dir = 1 if distance >= 0 else -1
         D.direction = player_dir
@@ -412,7 +416,7 @@ class D:
         return D.laser_active and D.rect.bottom // CELL_H == Armin.rect.bottom // CELL_H and D.laser_rect().colliderect(Armin.rect)
 
     @staticmethod
-    def update_laser(dt): #laser needs to charge before actually firing and the char for it is -----; this process is a part of the firing. when firing, it's =====; needs to cooldown after firing
+    def update_laser(dt): #laser needs to charged before actually firing and the char for it is -----; this process is a part of the firing. when firing, it's =====; needs to cooldown after firing
         if D.laser_cooldown_timer > 0:
             D.laser_cooldown_timer = max(0, D.laser_cooldown_timer - dt)
             if D.laser_cooldown_timer == 0:
@@ -456,7 +460,7 @@ class D:
         return False
 
     @staticmethod
-    def update():
+    def update(): #this function is called everything; processes character logic
         if not D.active:
             return
         dt = CLOCK.get_time()
@@ -536,7 +540,7 @@ class D:
 
 
     @staticmethod
-    def draw():
+    def draw():#draw the character
         if not D.active:
             return
         for row_i, line in enumerate(D.current_frame()):
@@ -601,7 +605,7 @@ class Moose:
                    "  |< |<"]]}
 
     @staticmethod
-    def reset_all():
+    def reset_all():#reset to default
         for i in range(Moose.MAX):
             Moose.active[i] = False
             Moose.rect[i] = pygame.Rect(0, 0, Moose.W, Moose.H)
@@ -613,7 +617,7 @@ class Moose:
             Moose.hp[i] = Moose.MAX_HP
 
     @staticmethod
-    def initialize(x, y):
+    def initialize(x, y):#initialize active moose
         for i in range(Moose.MAX):
             if not Moose.active[i]:
                 Moose.active[i] = True
@@ -628,7 +632,7 @@ class Moose:
         return False
 
     @staticmethod
-    def spawn(count):
+    def spawn(count):#randomly spawn the moose somewhere 
         spots = open_spawn_spots(Moose.W, Moose.H, min_player_distance=CELL_W * 12)
         random.shuffle(spots)
         for x, y in spots[:count]:
@@ -638,6 +642,7 @@ class Moose:
     def apply_gravity(i):
         Moose.vy[i] += GRAVITY
         Moose.rect[i].y += Moose.vy[i]
+
         if Moose.vy[i] >= 0 and grounded_enough(Moose.rect[i]):
             while grounded_enough(Moose.rect[i]):
                 Moose.rect[i].y -= 1
@@ -645,13 +650,16 @@ class Moose:
             Moose.vy[i] = 0
 
     @staticmethod
-    def random_walk(i, dt):
+    def random_walk(i, dt):#moose just walks around randomly
         Moose.random_walk_timer[i] -= dt
+
         if Moose.random_walk_timer[i] <= 0:
             Moose.random_walk_timer[i] = random.randint(Moose.RANDOM_WALK_TIME_MIN, Moose.RANDOM_WALK_TIME_MAX)
             Moose.move_direction[i] = random.choice([-1, 0, 0, 0, 1])
+
             if Moose.move_direction[i] != 0:
                 Moose.direction[i] = Moose.move_direction[i]
+
         return Moose.move_direction[i] * Moose.SPEED
 
     @staticmethod
@@ -659,11 +667,13 @@ class Moose:
         if dx == 0:
             Moose.state[i] = "idle"
             return
+        
         old_x = Moose.rect[i].x
         Moose.rect[i].x += dx
         Moose.direction[i] = 1 if dx > 0 else -1
         front_x = (Moose.rect[i].right if dx > 0 else Moose.rect[i].left - 1) // CELL_W
         floor_y = Moose.rect[i].bottom // CELL_H
+
         if hits_ground_side(Moose.rect[i], dx) or (front_x, floor_y) not in GROUND:
             Moose.rect[i].x = old_x
             Moose.direction[i] *= -1
@@ -671,6 +681,7 @@ class Moose:
             Moose.state[i] = "idle"
         else:
             Moose.state[i] = "walk"
+
         Moose.rect[i].x = clamp(Moose.rect[i].x, 0, WIDTH - Moose.rect[i].width)
 
     @staticmethod
@@ -811,34 +822,43 @@ class Armin:
             Armin.on_ground = False
 
     @staticmethod
-    def update():
+    def update(): 
         keys = pygame.key.get_pressed()
         dt = CLOCK.get_time()
         dx = 0
+
         if Armin.state != "shoot":
             if keys[pygame.K_a]:
                 dx -= MOVE_SPEED
                 Armin.direction = -1
+
             if keys[pygame.K_d]:
                 dx += MOVE_SPEED
                 Armin.direction = 1
-            if keys[pygame.K_w] and Armin.on_ground:
+
+            if keys[pygame.K_w] and Armin.on_ground: #can jump only if it's on the ground
                 Armin.vy = JUMP_SPEED
                 Armin.on_ground = False
                 Armin.state = "jump"
+
             Armin.rect.x += dx
             if hits_ground_side(Armin.rect, dx):
                 Armin.rect.x -= dx
+
             Armin.rect.x = clamp(Armin.rect.x, 0, WIDTH - Armin.rect.width)
+
         Armin.apply_gravity()
         if keys[pygame.K_j]:
             Armin.state = "shoot"
             Armin.fire_timer -= dt
+
             if Armin.fire_timer <= 0:
                 Bullet.spawn()
                 Armin.fire_timer = Armin.FIRE_INTERVAL
+
         else:
             Armin.fire_timer = 0
+
             if Armin.on_ground:
                 Armin.state = "walk" if dx else "idle"
 
@@ -863,7 +883,7 @@ class Armin:
         SCREEN.blit(TEXT_FONT.render(f"Sanity: {Armin.sanity}", True, RED), (CELL_W, HEIGHT - CELL_H * 2))
 
 
-class Teleport:
+class Teleport: #this is a location where the player will be teleported to the next level
     X = WIDTH - CELL_W * 3
     Y = CELL_H * 37
     W = CELL_W * 3
@@ -896,7 +916,7 @@ class Teleport:
                 SCREEN.blit(cached_char(ch, Teleport.COLOR), (Teleport.X + i * CELL_W, Teleport.Y))
 
 
-class Zombie:
+class Zombie: #behaves just like moose, except it can attack
     MAX = 20
     W = CELL_W * 4
     H = CELL_H * 4
@@ -1016,7 +1036,7 @@ class Zombie:
     }
 
     @staticmethod
-    def reset_all():
+    def reset_all(): #reset everything to default value
         for i in range(Zombie.MAX):
             Zombie.active[i] = False
             Zombie.rect[i] = pygame.Rect(0, 0, Zombie.W, Zombie.H)
@@ -1029,7 +1049,7 @@ class Zombie:
             Zombie.hit_alerted[i] = False
 
     @staticmethod
-    def initialize(x, y):
+    def initialize(x, y): #initialze active zombies
         for i in range(Zombie.MAX):
             if not Zombie.active[i]:
                 Zombie.active[i] = True
@@ -1045,7 +1065,7 @@ class Zombie:
         return False
 
     @staticmethod
-    def spawn(count):
+    def spawn(count): #spawn zombies randomly
         spots = open_spawn_spots(Zombie.W, Zombie.H, min_player_distance=CELL_W * 12)
         random.shuffle(spots)
         spawned = 0
@@ -1066,17 +1086,20 @@ class Zombie:
             Zombie.vy[i] = 0
 
     @staticmethod
-    def same_level_as_player(i):
+    def same_level_as_player(i): #helper for can_see_player(); tests for y coordinate 
         return Zombie.rect[i].bottom // CELL_H == Armin.rect.bottom // CELL_H
 
     @staticmethod
-    def clear_path_to_player(i):
+    def clear_path_to_player(i):#helper for can_see_player(); tests for obstacles
         zrect = Zombie.rect[i]
+
         start = min(zrect.centerx, Armin.rect.centerx) // CELL_W
         end = max(zrect.centerx, Armin.rect.centerx) // CELL_W
         top = min(zrect.top, Armin.rect.top) // CELL_H
         bottom = max(zrect.bottom, Armin.rect.bottom) // CELL_H
+        
         floor_y = zrect.bottom // CELL_H
+
         for x in range(start, end + 1):
             for y in range(top, bottom):
                 if (x, y) in GROUND:
@@ -1096,9 +1119,11 @@ class Zombie:
     @staticmethod
     def random_walk(i, dt):
         Zombie.random_walk_timer[i] -= dt
+
         if Zombie.random_walk_timer[i] <= 0:
             Zombie.random_walk_timer[i] = random.randint(Zombie.RANDOM_WALK_TIME_MIN, Zombie.RANDOM_WALK_TIME_MAX)
             Zombie.direction[i] = random.choice([-1, 0, 1])
+
         return Zombie.direction[i] * Zombie.SPEED
 
     @staticmethod
@@ -1106,23 +1131,28 @@ class Zombie:
         if dx == 0:
             Zombie.state[i] = "idle"
             return
+        
         old_x = Zombie.rect[i].x
         Zombie.rect[i].x += dx
         Zombie.direction[i] = 1 if dx > 0 else -1
+
         front_x = (Zombie.rect[i].right if dx > 0 else Zombie.rect[i].left - 1) // CELL_W
         floor_y = Zombie.rect[i].bottom // CELL_H
+
         if hits_ground_side(Zombie.rect[i], dx) or (front_x, floor_y) not in GROUND:
             Zombie.rect[i].x = old_x
             Zombie.direction[i] *= -1
             Zombie.state[i] = "idle"
         else:
             Zombie.state[i] = "walk"
+
         Zombie.rect[i].x = clamp(Zombie.rect[i].x, 0, WIDTH - Zombie.rect[i].width)
 
     @staticmethod
     def attack(i, dt):
         Zombie.state[i] = "attack"
         Zombie.attack_timer[i] -= dt
+
         if Zombie.attack_timer[i] <= 0:
             Armin.take_damage(Zombie.ATTACK_DAMAGE)
             Zombie.attack_timer[i] = Zombie.ATTACK_INTERVAL
@@ -1148,16 +1178,6 @@ class Zombie:
 
     @staticmethod
     def current_frame(i):
-        # frame_set= Zombie.ZOMBIE_RIGHT if Zombie.direction[i] == 1 else Zombie.ZOMBIE_LEFT
-        # packed = frame_set[Zombie.state[i]][0]
-        # frame_h = Zombie.H // CELL_H
-        # frame_count = len(packed) // frame_h
-
-        # if frame_count <= 1:
-        #     return packed
-        # speed = Zombie.ATTACK_INTERVAL // frame_count if Zombie.state[i] == "attack" else 180
-        # frame = (pygame.time.get_ticks() // speed) % frame_count
-        # return packed[frame * frame_h:frame * frame_h + frame_h]
         art = Zombie.ZOMBIE_RIGHT if Zombie.direction[i] == 1 else Zombie.ZOMBIE_LEFT
         frames = art[Zombie.state[i]]
         frame = (pygame.time.get_ticks() // 180) % len(frames)
@@ -1186,7 +1206,7 @@ class Zombie:
                         SCREEN.blit(cached_char(ch, Zombie.COLOR), (Zombie.rect[i].x + col_i * CELL_W, Zombie.rect[i].y + row_i * CELL_H))
 
 
-class Level3ZombieSpawner: 
+class Level3ZombieSpawner: #spawns zombie indefinitely in level3
     BASE_INTERVAL = 2200
     INTERVAL_RANDOM_DELTA = 900
     SPAWN_COUNT_MIN = 1
@@ -1242,7 +1262,7 @@ class Level3ZombieSpawner:
         Level3ZombieSpawner.schedule_next()
 
 
-class Bullet:
+class Bullet: 
     MAX = 64
     SPEED = 12
     RANGE = WIDTH // 6
@@ -1265,15 +1285,18 @@ class Bullet:
     def spawn(shooter=None):
         if shooter is None:
             shooter = Armin
+
         for i in range(Bullet.MAX):
             if not Bullet.active[i]:
                 Bullet.active[i] = True
+
                 if shooter.direction == 1:
                     Bullet.x[i] = shooter.rect.right
                     Bullet.vx[i] = Bullet.SPEED
                 else:
                     Bullet.x[i] = shooter.rect.left - CELL_W
                     Bullet.vx[i] = -Bullet.SPEED
+
                 Bullet.start_x[i] = Bullet.x[i]
                 Bullet.y[i] = shooter.rect.y + CELL_H
                 return
@@ -1283,19 +1306,24 @@ class Bullet:
         for i in range(Bullet.MAX):
             if not Bullet.active[i]:
                 continue
+            
             Bullet.x[i] += Bullet.vx[i]
             col = Bullet.x[i] // CELL_W
             row = Bullet.y[i] // CELL_H
+
             if Bullet.x[i] < 0 or Bullet.x[i] >= WIDTH or abs(Bullet.x[i] - Bullet.start_x[i]) > Bullet.RANGE or (col, row) in GROUND:
                 Bullet.active[i] = False
                 continue
+            
             bullet_rect = pygame.Rect(Bullet.x[i], Bullet.y[i], CELL_W, CELL_H)
             bullet_dir = 1 if Bullet.vx[i] > 0 else -1
+
             for z in range(Zombie.MAX):
                 if Zombie.active[z] and bullet_rect.colliderect(Zombie.rect[z]):
                     Bullet.active[i] = False
                     Zombie.take_hit(z, bullet_dir)
                     break
+                
             if not Bullet.active[i]:
                 continue
             for m in range(Moose.MAX):
@@ -1303,6 +1331,7 @@ class Bullet:
                     Bullet.active[i] = False
                     Moose.take_hit(m, bullet_dir)
                     break
+                
             if not Bullet.active[i]:
                 continue
             if D.active and bullet_rect.colliderect(D.rect):
@@ -1317,12 +1346,12 @@ class Bullet:
                 SCREEN.blit(bullet_char, (Bullet.x[i], Bullet.y[i]))
 
 
-def load_json(filename):
+def load_json(filename): #loads level file
     with open(filename, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def cached_char(ch, color):
+def cached_char(ch, color): #check if the character and color was already rendered. If so, reuse it. If not, cache it.
     key = (ch, color)
     surf = CHAR_CACHE.get(key)
     if surf is None:
@@ -1331,14 +1360,15 @@ def cached_char(ch, color):
     return surf
 
 
-def color_from_key(key):
+def color_from_key(key): #reads color values that were stored in json files
     return tuple(LEVEL_COLORS.get(key, [255, 255, 255]))
 
 
-def build_background(level):
+def build_background(level): 
     BACKGROUND.fill(tuple(level.get("clear_color", [0, 0, 0])))
     bg = level["background"]
     bgc = level["background_colors"]
+
     for y in range(min(ROWS, len(bg))):
         for x in range(min(COLS, len(bg[y]))):
             ch = bg[y][x]
@@ -1346,7 +1376,7 @@ def build_background(level):
                 BACKGROUND.blit(cached_char(ch, color_from_key(bgc[y][x])), (x * CELL_W, y * CELL_H))
 
 
-def build_ground(level):
+def build_ground(level): #ground is where characters can stand on
     GROUND.clear()
     for y, row in enumerate(level["ground"][:ROWS]):
         for x, ch in enumerate(row[:COLS]):
@@ -1360,6 +1390,7 @@ def grounded_enough(rect): #see if there is enough ground to support the charact
     end_x = (rect.right - 1) // CELL_W
     count = 0
     needed = max(1, (end_x - start_x + 1) // 2) #half the character's width is needed to support the character
+
     for tile_x in range(start_x, end_x + 1):
         if (tile_x, tile_y) in GROUND:
             count += 1
@@ -1368,7 +1399,7 @@ def grounded_enough(rect): #see if there is enough ground to support the charact
     return False
 
 
-def hits_ground_side(rect, dx):
+def hits_ground_side(rect, dx):  #see if there's wall on the side
     top = rect.top // CELL_H
     bottom = (rect.bottom - 1) // CELL_H
     if dx > 0:
@@ -1377,6 +1408,7 @@ def hits_ground_side(rect, dx):
         x = rect.left // CELL_W
     else:
         return False
+    
     for y in range(top, bottom + 1):
         if (x, y) in GROUND:
             return True
@@ -1388,12 +1420,12 @@ def clamp(value, low, high):
     return max(low, min(high, value))
 
 
-def spawn_x(data, default_col):
-    return int(data.get("x", data.get("col", default_col) * CELL_W))
+# def spawn_x(data, default_col):
+#     return int(data.get("x", data.get("col", default_col) * CELL_W))
 
 
-def spawn_y(data, default_row):
-    return int(data.get("y", data.get("row", default_row) * CELL_H))
+# def spawn_y(data, default_row):
+#     return int(data.get("y", data.get("row", default_row) * CELL_H))
 
 
 def rect_hits_ground(rect):
@@ -1434,7 +1466,7 @@ def draw_ground():
         SCREEN.blit(ground_char, (x * CELL_W, y * CELL_H))
 
 
-def wrap_words(text, max_width):
+def wrap_words(text, max_width):#splits text into multiple lines so each line fits within max_width pixels.
     words, lines, line = text.split(), [], ""
     for word in words:
         test = word if not line else line + " " + word
@@ -1460,7 +1492,7 @@ def draw_paragraph(text, x, y, max_width, color):
         SCREEN.blit(TEXT_FONT.render(line, True, color), (x, y + i * 32))
 
 
-def run_text_sequence(sequence):
+def run_text_sequence(sequence):#displays the text with a typewriter effect
     for entry in sequence:
         full_text, visible, done = entry["text"], 0, False
         while True:
@@ -1503,7 +1535,7 @@ def run_text_sequence(sequence):
             pygame.display.flip()
 
 
-def run_level3_intro():
+def run_level3_intro():#level3 intro. Only run the first time level3 is played. It's just for narrative
     elapsed = 0
     while elapsed < LEVEL3_START_FREEZE_MS:
         dt = CLOCK.tick(FPS)
@@ -1518,28 +1550,33 @@ def run_level3_intro():
     run_text_sequence(TEXT_DATA.get("level3_intro", []))
 
 
-def run_level3_dialog():
+def run_level3_dialog():#level3 dialog. It's just for narrative
     sequence = TEXT_DATA.get("box", [])
     split_at = min(FIRST_D_REGEN_DIALOG_PARTS_BEFORE_REGEN, len(sequence))
     if split_at > 0:
         run_text_sequence(sequence[:split_at])
+
     D.complete_first_dialog_regeneration()
     if split_at < len(sequence):
         run_text_sequence(sequence[split_at:])
 
 
-def draw_level3_game_over_screen(selection): 
+def draw_level3_game_over_screen(selection):  
     SCREEN.fill(BLACK)
+
     title = TEXT_FONT.render("GAME OVER", True, WHITE)
     SCREEN.blit(title, title.get_rect(center=(WIDTH // 2, HEIGHT // 2 - CELL_H * 5)))
+
     entries = TEXT_DATA.get("special_game_over", [])
     sentence = entries[0]["text"]
     draw_paragraph(sentence, WIDTH // 4 + 120, HEIGHT // 2 - CELL_H * 3, WIDTH // 2, WHITE)
+
     for i, option in enumerate(["Restart", "Quit"]):
         prefix = "> " if i == selection else "  "
         color = Armin_COLOR if i == selection else WHITE
         text = TEXT_FONT.render(prefix + option, True, color)
         SCREEN.blit(text, text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + i * CELL_H * 2)))
+
     hint = TEXT_FONT.render("Use Up/Down and Enter", True, WHITE)
     SCREEN.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT // 2 + CELL_H * 5)))
 
@@ -1567,6 +1604,7 @@ def reset_current_level(preserve_player_y=None, preserve_player_stats=False):
 
     build_background(level)
     build_ground(level)
+
     Teleport.set_y(level_teleport_y(level))
     Armin.reset()
     D.reset(active=False)
@@ -1718,7 +1756,7 @@ def run_start_menu():
         CLOCK.tick(FPS)
 
 
-def draw_frame(level_index=None):
+def draw_frame(level_index=None):#draw everything
     SCREEN.blit(BACKGROUND, (0, 0))
     draw_ground()
     Teleport.draw()
