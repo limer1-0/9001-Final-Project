@@ -52,7 +52,7 @@ PLAYED_D_DIALOG = False
 START_MENU_BG = None
 ##########################################################################
 
-class D:  #although it's a class, it really is just a grouping of related function and variables; there's only one boss
+class D:  #Since there's only one boss, there's no need for instances. This really is just a grouping of related function and variables. 
     active = False
 
     W = CELL_W * 13
@@ -84,7 +84,7 @@ class D:  #although it's a class, it really is just a grouping of related functi
     has_regenerated_hp = False
 
     dialog_pending = False
-    HIT_DAMAGE = 1 
+    HIT_DAMAGE = 1
     HIT_PUSH_OFFSET = CELL_W * 2
     
     LASER_DURATION = 700
@@ -1779,7 +1779,13 @@ def main():
     PLAYED_D_DIALOG = False
 
     load_level(CURRENT_LEVEL_INDEX)
-    TEXT_DATA = load_json("text.json")
+    #TEXT_DATA = load_json("text.json")
+
+    try:
+        TEXT_DATA = load_json("text.json")
+    except FileNotFoundError:
+        TEXT_DATA = {"intro": [], "quit_dialogue": [], "level3_intro": [], "box": [], "black": [], "special_game_over": []}
+
     reset_current_level()
 
     START_MENU_BG = load_start_menu_background("bg.png")
